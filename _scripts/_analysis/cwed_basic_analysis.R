@@ -174,7 +174,7 @@ cwed_map <- ggplot(data = shape) +
                               'Expanded CW, Targeted INT'))
 
 # saving
-ggsave(filename = "_output/_figures/cwed_map.png", plot = cwed_map, width = 8, height = 6, dpi = 300)
+ggsave(filename = "_output/_figures/cwed_map.png", plot = cwed_map, width = 24, height = 9, dpi = 300)
 
 # now let's create a map with lines for a specific conflict
 # let's do South Africa (560), conflictID == 150, year ==1981
@@ -251,6 +251,6 @@ sa_map <- ggplot(data = shape_1981) +
              alpha = 0.8)
 
 # saving
-ggsave(filename = "_output/_figures/sa_map.png", plot = sa_map, width = 8, height = 6, dpi = 300)
+ggsave(filename = "_output/_figures/sa_map.png", plot = sa_map, width = 24, height = 18, dpi = 300)
 
 
