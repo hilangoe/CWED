@@ -18,6 +18,8 @@ library(ggrepel)
 conf <- read.csv("conflict_list.csv")
 df <- read.csv("cwed.csv")
 
+cols_map <- c('white', 'pink2', 'lightskyblue2', 'lightskyblue3')
+
 # UI
 ui <- fluidPage(
   titlePanel("CWED Map App"),
