@@ -5,6 +5,8 @@ library(sf)
 library(cshapes)
 library(ggplot2)
 library(countrycode)
+library(viridis)
+library(RColorBrewer)
 
 # to-do:
 # load dataset
@@ -30,9 +32,10 @@ ret_type_dis <- ggplot(df_long, aes(x = factor(ret_type, levels = custom_order),
   scale_fill_brewer(palette="Spectral") +
 #  scale_fill_manual(values = c("#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF")) +
   labs(title = "Count of retaliation types (disaggregated)",
-       x = "Category",
+       x = "",
        y = "Count",
-       fill = "Retaliation")
+       fill = "Retaliation") +
+  guides(fill = FALSE)
 
 # saving
 ggsave(filename = "_output/_figures/ret_type_dis.png", plot = ret_type_dis, width = 8, height = 6, dpi = 300)
@@ -55,9 +58,10 @@ ret_type_conf <- ggplot(df_long, aes(x = factor(ret_type, levels = custom_order)
   scale_fill_brewer(palette="Spectral") +
   #  scale_fill_manual(values = c("#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF")) +
   labs(title = "Count of retaliation types (conflict-level)",
-       x = "Category",
+       x = "",
        y = "Count",
-       fill = "Retaliation")
+       fill = "Retaliation") +
+  guides(fill = FALSE)
 
 # saving
 ggsave(filename = "_output/_figures/ret_type_conf.png", plot = ret_type_conf, width = 8, height = 6, dpi = 300)
@@ -69,8 +73,8 @@ df_hist <- df.cwed %>%
 
 type_count_dis <- ggplot(df_hist, aes(x = type_count)) +
   geom_histogram(bins = 6, fill="#69b3a2", color="#e9ecef", alpha=0.9) +
-  labs(title = "Number of retaliation types by observation",
-       x = "Number of retaliation types",
+  labs(title = "Number of retaliation types by intervention",
+       x = "",
        y = "Count") +
   scale_x_continuous(breaks = c(0, 1, 2, 3, 4, 5))
 
@@ -91,12 +95,99 @@ table(df_hist$type_count)
 type_count_conf <- ggplot(df_hist, aes(x = type_count)) +
   geom_histogram(bins = 6, fill="#69b3a2", color="#e9ecef", alpha=0.9) +
   labs(title = "Number of retaliation types by conflict",
-       x = "Number of retaliation types",
+       x = "",
        y = "Count") +
   scale_x_continuous(breaks = c(0, 1, 2, 3, 4, 5))
 
 # saving
 ggsave(filename = "_output/_figures/type_count_conf.png", plot = type_count_conf, width = 8, height = 6, dpi = 300)
+
+# creating bar chart for most frequent combinations of retaliations
+df_combo <- df.cwed %>%
+  select(direct, proxy, indirect, covert, threat) %>%
+  filter(rowSums(.) > 0) %>%
+  group_by_all() %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+top_ten_combinations <- df_combo %>%
+  arrange(desc(count)) %>%
+  head(10)
+
+# creating the custom labels for the legend, with each observed category
+top_ten_combinations$label <- apply(top_ten_combinations[, -ncol(top_ten_combinations)], 1, function(x) paste(names(x)[x == 1], collapse = ","))
+
+# creating the factor levels for the combination variable from the label column
+top_ten_combinations$combination <- factor(top_ten_combinations$label, levels = unique(top_ten_combinations$label))
+
+# creating the legend order to ensure it matches the combo order
+legend_order <- unique(top_ten_combinations$label)
+
+# sorting order of labels for the bars
+top_ten_combinations$label <- factor(top_ten_combinations$label, levels = legend_order)
+
+# custom palette for bar, using the brewer package
+custom_palette <- brewer.pal(n = 10, name = "Paired")
+
+p <- ggplot(top_ten_combinations, aes(x = label, y = count, fill = label)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = custom_palette) +
+  labs(title = "Top ten combinations of retaliations by intervention",
+       x = "",
+       y = "Frequency") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  guides(fill = guide_legend(title = "Types of retaliation", nrow = 10))
+
+# saving
+ggsave(filename = "_output/_figures/combo_dis.png", plot = p, width = 8, height = 6, dpi = 300)
+
+# creating bar chart for most frequent combination by conflict
+df_combo <- df.cwed %>%
+  select(conflictID, direct, proxy, indirect, covert, threat) %>%
+  group_by(conflictID) %>%
+  summarise_all(max) %>%
+  ungroup() %>%
+  select(-conflictID) %>%
+  filter(rowSums(.) > 0) %>%
+  group_by_all() %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+top_ten_combinations <- df_combo %>%
+  arrange(desc(count)) %>%
+  head(10)
+top_ten_combinations
+
+# creating the custom labels for the legend, with each observed category
+top_ten_combinations$label <- apply(top_ten_combinations[, -ncol(top_ten_combinations)], 1, function(x) paste(names(x)[x == 1], collapse = ","))
+
+# creating the factor levels for the combination variable from the label column
+top_ten_combinations$combination <- factor(top_ten_combinations$label, levels = unique(top_ten_combinations$label))
+
+# creating the legend order to ensure it matches the combo order
+legend_order <- unique(top_ten_combinations$label)
+
+# sorting order of labels for the bars
+top_ten_combinations$label <- factor(top_ten_combinations$label, levels = legend_order)
+
+# custom palette for bar, using the brewer package
+custom_palette <- brewer.pal(n = 10, name = "Paired")
+
+p <- ggplot(top_ten_combinations, aes(x = label, y = count, fill = label)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = custom_palette) +
+  labs(title = "Top ten combinations of retaliations by conflict",
+       x = "",
+       y = "Frequency") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  guides(fill = guide_legend(title = "Types of retaliation", nrow = 10))
+
+# saving
+ggsave(filename = "_output/_figures/combo_conf.png", plot = p, width = 8, height = 6, dpi = 300)
+
+
 
 
 # Maps --------------------------------------------------------------------
