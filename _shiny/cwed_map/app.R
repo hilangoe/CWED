@@ -30,7 +30,7 @@ ui <- fluidPage(
     textOutput("selectedInfo")
   ),
   fluidRow(
-    plotOutput("mapOutput", height = "600px", width = "100%")
+    plotOutput("mapOutput")
   )
 )
 
